@@ -1,42 +1,42 @@
 # ResizableElements
-ResizableElements это скрипт, позволяющий добавлять на страницу сайта изменяемые элементы, которые можно растягивать подобно окнам в Windows.
+ResizableElements is a script that allows you to add mutable elements to your page that can be stretched like windows in OS.
 
-# Версии
-* __resizableElements.js__ - _основная_ версия скрипта. Сделан с последними возможностями языка, максимально читабельный, но работает не во всех браузерах.
-* __resizableElements-сomp.js__ - _совместимая_ версия скрипта. Это переработанный с помощью _babel_ код основной версии. Работает во всех браузерах, но имеет больший вес.
-* __resizableElements-comp-min.js__ - _сжатый_ код совместимой весии скрипта. Весит мало. Кроссбраузерность не проверял, но должна быть.
+# Versions
+* __resizableElements.js__ - _main_ version of the script. Made with the latest features of the language, as readable as possible, but it doesn’t work in all browsers.
+* __resizableElements-сomp.js__ - _compatible_ version of the script. This is the _babel_-revised version code. Works in all browsers, but has more weight.
+* __resizableElements-comp-min.js__ - _compressed_ code of the compatible script weight. It weighs a little. I did not check cross-browser compatibility, but it should be.
 
-# Использование с помощью классов элемента
-Для начала подключим скрипт к странице, для этого достаточно добавить в конец страницы (либо в head) следующую строку:
+# Use with element classes
+First, connect the script to the page, for this it is enough to add the following line to the end of the page (or to the head):
 ```html
 <script src="https://verzsut.github.io/ResizableElements/resizableElements.js"></script>
 ```
-Также можно скачать скрипт на ваш сервер и подключить его оттуда.
+You can also download the script to your server and connect it from there.
 
-Чтобы сделать элемент изменяемым достаточно добавить ему класс _resizable_, в таком случае элемент можно будет растягивать в любые стороны и углы. Контролировать растяжку можно с помощью CSS свойств _max-width_, _min-width_ и _max-height_, _min-height_.
+To make an element mutable, just add the _resizable_ class to it, in which case the element can be stretched to any sides and angles. You can control the stretching using the CSS properties _max-width_, _min-width_ and _max-height_, _min-height_.
 
-Если вы хотите добавить возможность растяжения __только в какую-либо сторону/край__, то нужно добавить класс _resizableOnly_ и класс _sides-<список сторон>_. Например:
+If you want to add the possibility of stretching __only to any side/edge__, then you need to add the class _resizableOnly_ and the class _sides-<list of parties>_. For instance:
 ```html
 <div class="resizableOnly sides-top-right-topRight"></div>
 ```
-В таком случае элемент можно растягивать вверху, справа, а также в верхнем правом угле.
+In this case, the element can be stretched at the top, right, and also in the upper right corner.
 
-Если же вы хотите сделать растяжку __всех сторон кроме каких-либо__, то из прошлого примера поменяйте класс _resizableOnly_ на _resizableWithout_, а в _sides_ укажите стороны, которые надо исключить.
+If you want to stretch __all sides except any__, then from the previous example change the class _resizableOnly_ to _resizableWithout_, and in _sides_ specify the parties that should be excluded.
 ```html
 <div class="resizableWithout sides-top-right"></div>
 ```
-В таком случае элемент можно растягивать везде, кроме верхней и правой стороны.
+In this case, the element can be stretched everywhere except the upper and right sides.
 
-# Использование с помощью JS
-Можно делать элементы изменяемыми с помощью JS, а именно метода __Resizable.make__:
+# Use with JS
+You can make elements mutable using JS, namely the __Resizable.make__ method:
 ```js
 let target = document.getElementById('target')
 Resizable.make(target)
 ```
-В качестве обязательного аргумента функция принимает элемент, который надо сделать изменяемым. Вторым, необязательным аргументом принимается массив строк (сторон), которые можно будет перетаскивать.
+As a required argument, the function takes an element that must be made mutable. The second, optional argument is an array of strings (sides) that can be dragged.
 ```js
 Resizable.make(element, ['left', 'bottom'])
 ```
 
-# Демо
-Посмотреть как работает скрипт ты можете по этой [ссылке](https://codepen.io/VerZsuT/pen/YzyVgEW)
+# Demo
+You can see how the script works at this [link](https://codepen.io/VerZsuT/pen/YzyVgEW)
