@@ -1,5 +1,5 @@
 # ResizableElements
-ResizableElements is a script that allows you to add mutable elements to your page that can be stretched like windows in OS.
+ResizableElements is a script that allows you to add resizable elements to your page that can be stretched like windows in OS.
 
 # Versions
 * __resizableElements.js__ - _main_ version of the script. Made with the latest features of the language, as readable as possible, but it doesn’t work in all browsers.
