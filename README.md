@@ -33,3 +33,5 @@ Resizable.make(target)
 Resizable.make(element, ['left', 'bottom'])
 ```
 
+# Демо
+Посмотреть как работает скрипт ты можете по этой [ссылке](https://codepen.io/VerZsuT/pen/YzyVgE)
