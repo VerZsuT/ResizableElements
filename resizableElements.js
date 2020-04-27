@@ -249,6 +249,7 @@ class Resizable {
 		let onMouseMove = (event) => {
 			event.stopPropagation()
 			let newCursorPosition = {x: event.pageX, y: event.pageY}
+			let styles = window.getComputedStyle(parent)
 			let newWidth = parseInt(parent.style.width) - (newCursorPosition.x - this.#cursorPosition.x)
 			parent.style.width = this.#limiter(parseInt(styles.minWidth), parseInt(styles.maxWidth) || Infinity, newWidth) + 'px'
 			this.#cursorPosition = newCursorPosition

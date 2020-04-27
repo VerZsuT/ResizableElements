@@ -377,6 +377,7 @@ var _createLeftResizer = {
         x: event.pageX,
         y: event.pageY
       };
+      var styles = window.getComputedStyle(parent);
 
       var newWidth = parseInt(parent.style.width) - (newCursorPosition.x - _classStaticPrivateFieldSpecGet(Resizable, Resizable, _cursorPosition).x);
 
