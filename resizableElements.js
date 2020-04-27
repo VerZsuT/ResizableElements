@@ -3,10 +3,20 @@ class Resizable {
 
 	static make(element, sides=['topLeft', 'top', 'topRight', 'right', 'bottomRight', 'bottom', 'bottomLeft', 'left']) {
 		let shell = document.createElement('div')
-		shell.style.width = '100%'
-		shell.style.height = '100%'
+		let styles = window.getComputedStyle(element)
+
+		shell.style.padding = styles.padding
+		shell.style.paddingTop = styles.paddingTop
+		shell.style.paddingRight = styles.paddingRight
+		shell.style.paddingLeft = styles.paddingLeft
+		shell.style.paddingBottom = styles.paddingBottom
+		shell.style.width = styles.width
+		shell.style.height = styles.height
 		shell.style.position = 'relative'
 		shell.innerHTML = element.innerHTML
+
+		element.style.width = parseInt(styles.width) + parseInt(styles.paddingLeft) + parseInt(styles.paddingRight) + 'px'
+		element.style.height = parseInt(styles.height) + parseInt(styles.paddingTop) + parseInt(styles.paddingBottom) + 'px'
 
 		for (let side of sides) {
 			switch (side) {
@@ -37,6 +47,7 @@ class Resizable {
 			}
 		}					
 
+		element.style.padding = 0
 		element.innerHTML = ''
 		element.appendChild(shell)
 	}
@@ -53,14 +64,17 @@ class Resizable {
 		resizer.style.zIndex = 1
 
 		resizer.onmousedown = (event) => {
-			let styles = window.getComputedStyle(parent)
+			let shell = resizer.parentElement
+			let callback = (event) => {
+				shell.style.width = parseInt(parent.style.width) - (parseInt(shell.style.paddingLeft) + parseInt(shell.style.paddingRight)) + 'px'
+				shell.style.height = parseInt(parent.style.height) - (parseInt(shell.style.paddingTop) + parseInt(shell.style.paddingBottom)) + 'px'
+				listener(event)
+			}
 			this.#cursorPosition.x = event.pageX
 			this.#cursorPosition.y = event.pageY
-			parent.style.width = styles.width
-			parent.style.height = styles.height
-			document.addEventListener('mousemove', listener)
+			document.addEventListener('mousemove', callback)
 			document.addEventListener('mouseup', () => {
-				document.removeEventListener('mousemove', listener)
+				document.removeEventListener('mousemove', callback)
 			})
 		}
 
