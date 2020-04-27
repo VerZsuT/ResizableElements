@@ -219,7 +219,7 @@ class Resizable {
 	}
 }
 
-document.body.onload = () => {
+window.onload = () => {
 	let resizableElements = document.getElementsByClassName('resizable')
 	let resizableOnlyElements = document.getElementsByClassName('resizableOnly')
 	let resizableWithoutElements = document.getElementsByClassName('resizableWithout')
