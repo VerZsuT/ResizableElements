@@ -1,7 +1,7 @@
 class Resizable {
 	static #cursorPosition = {x: 0, y: 0}
 
-	static make(element, sides) {
+	static make(element, sides=['topLeft', 'top', 'topRight', 'right', 'bottomRight', 'bottom', 'bottomLeft', 'left']) {
 		let shell = document.createElement('div')
 		shell.style.width = '100%'
 		shell.style.height = '100%'
@@ -226,7 +226,7 @@ window.onload = () => {
 	let allSides = ['topLeft', 'top', 'topRight', 'right', 'bottomRight', 'bottom', 'bottomLeft', 'left']
 
 	for (let element of resizableElements) {
-		Resizable.make(element, allSides)
+		Resizable.make(element)
 	}
 
 	for (let element of resizableOnlyElements) {
