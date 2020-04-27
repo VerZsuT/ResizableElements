@@ -4,7 +4,7 @@ ResizableElements это скрипт, позволяющий добавлять
 # Использование с помощью классов элемента
 Для начала подключим скрипт к странице, для этого достаточно добавить в конец страницы (либо в head) следующую строку:
 ```html
-<script src="https://verzsut.github.io/ResizableElements/ResizableElements.js"></script>
+<script src="https://verzsut.github.io/ResizableElements/resizableElements.js"></script>
 ```
 Также можно скачать скрипт на ваш сервер и подключить его оттуда.
 
