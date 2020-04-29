@@ -168,12 +168,12 @@ var _createResizer = {
       _iterator8.f();
     }
 
-    resizer.onmousedown = function (event) {
+    var onMouseDown = function onMouseDown(event) {
       event.stopPropagation();
       var shell = resizer.parentElement;
       var styles = window.getComputedStyle(parent);
 
-      var callback = function callback(event) {
+      var onMouseMove = function onMouseMove(event) {
         var newCursorPosition = {
           x: event.pageX,
           y: event.pageY
@@ -220,12 +220,18 @@ var _createResizer = {
 
       _classStaticPrivateFieldSpecGet(Resizable, Resizable, _cursorPosition).x = event.pageX;
       _classStaticPrivateFieldSpecGet(Resizable, Resizable, _cursorPosition).y = event.pageY;
-      document.addEventListener('mousemove', callback);
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('touchmove', onMouseMove);
       document.addEventListener('mouseup', function () {
-        document.removeEventListener('mousemove', callback);
+        document.removeEventListener('mousemove', onMouseMove);
+      });
+      document.addEventListener('touchend', function () {
+        document.removeEventListener('touchmove', onMouseMove);
       });
     };
 
+    resizer.onmousedown = onMouseDown;
+    resizer.ontouchstart = onMouseDown;
     return resizer;
   }
 };

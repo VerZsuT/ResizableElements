@@ -99,11 +99,11 @@ class Resizable {
 			}
 		}
 
-		resizer.onmousedown = (event) => {
+		let onMouseDown = (event) => {
 			event.stopPropagation()
 			let shell = resizer.parentElement
 			let styles = window.getComputedStyle(parent)
-			let callback = (event) => {
+			let onMouseMove = (event) => {
 				let newCursorPosition = {x: event.pageX, y: event.pageY}
 				let styles = window.getComputedStyle(parent)
 				if (type == 'horizontal' || type == 'angle') {
@@ -140,11 +140,18 @@ class Resizable {
 			
 			this.#cursorPosition.x = event.pageX
 			this.#cursorPosition.y = event.pageY
-			document.addEventListener('mousemove', callback)
+			document.addEventListener('mousemove', onMouseMove)
+			document.addEventListener('touchmove', onMouseMove)
 			document.addEventListener('mouseup', () => {
-				document.removeEventListener('mousemove', callback)
+				document.removeEventListener('mousemove', onMouseMove)
+			})
+			document.addEventListener('touchend', () => {
+				document.removeEventListener('touchmove', onMouseMove)
 			})
 		}
+
+		resizer.onmousedown = onMouseDown
+		resizer.ontouchstart = onMouseDown 
 
 		return resizer
 	}
