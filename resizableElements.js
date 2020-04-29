@@ -104,7 +104,10 @@ class Resizable {
 			let shell = resizer.parentElement
 			let styles = window.getComputedStyle(parent)
 			let onMouseMove = (event) => {
-				let newCursorPosition = {x: event.pageX, y: event.pageY}
+				let newCursorPosition = {
+					x: event.pageX || event.touches[0].pageX,
+					y: event.pageY || event.touches[0].pageY
+				}
 				let styles = window.getComputedStyle(parent)
 				if (type == 'horizontal' || type == 'angle') {
 					let newParentWidth = null
@@ -150,8 +153,8 @@ class Resizable {
 			})
 		}
 
-		resizer.onmousedown = onMouseDown
-		resizer.ontouchstart = onMouseDown 
+		resizer.addEventListener('mousedown', onMouseDown)
+		resizer.addEventListener('touchstart', onMouseDown)
 
 		return resizer
 	}

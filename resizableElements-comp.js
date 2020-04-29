@@ -175,8 +175,8 @@ var _createResizer = {
 
       var onMouseMove = function onMouseMove(event) {
         var newCursorPosition = {
-          x: event.pageX,
-          y: event.pageY
+          x: event.pageX || event.touches[0].pageX,
+          y: event.pageY || event.touches[0].pageY
         };
         var styles = window.getComputedStyle(parent);
 
@@ -230,8 +230,8 @@ var _createResizer = {
       });
     };
 
-    resizer.onmousedown = onMouseDown;
-    resizer.ontouchstart = onMouseDown;
+    resizer.addEventListener('mousedown', onMouseDown);
+    resizer.addEventListener('touchstart', onMouseDown);
     return resizer;
   }
 };
