@@ -19,32 +19,34 @@ class Resizable {
 		element.style.height = parseInt(styles.height) + parseInt(styles.paddingTop) + parseInt(styles.paddingBottom) + 'px'
 
 		for (let side of sides) {
+			let resizer = null
 			switch (side) {
 				case 'topLeft':
-					shell.appendChild(this.#createTopLeftResizer(element))
+					resizer = this.#createResizer(element, 'angle', ['top', 'left'], 'se-resize')
 					break
 				case 'topRight':
-					shell.appendChild(this.#createTopRightResizer(element))
+					resizer = this.#createResizer(element, 'angle', ['top', 'right'], 'ne-resize')
 					break
 				case 'bottomLeft':
-					shell.appendChild(this.#createBottomLeftResizer(element))
+					resizer = this.#createResizer(element, 'angle', ['bottom', 'left'], 'ne-resize')
 					break
 				case 'bottomRight':
-					shell.appendChild(this.#createBottomRightResizer(element))
+					resizer = this.#createResizer(element, 'angle', ['bottom', 'right'], 'se-resize')
 					break
 				case 'top':
-					shell.appendChild(this.#createTopResizer(element))
-					break
-				case 'right':
-					shell.appendChild(this.#createRightResizer(element))
+					resizer = this.#createResizer(element, 'vertical', ['top'])
 					break
 				case 'bottom':
-					shell.appendChild(this.#createBottomResizer(element))
+					resizer = this.#createResizer(element, 'vertical', ['bottom'])
 					break
 				case 'left':
-					shell.appendChild(this.#createLeftResizer(element))
+					resizer = this.#createResizer(element, 'horizontal', ['left'])
+					break
+				case 'right':
+					resizer = this.#createResizer(element, 'horizontal', ['right'])
 					break
 			}
+			shell.appendChild(resizer)
 		}					
 
 		element.style.padding = 0
@@ -52,7 +54,7 @@ class Resizable {
 		element.appendChild(shell)
 	}
 
-	static #createResizer = (parent, listener) => {
+	static #createResizer = (parent, type, sides, cursor=null) => {
 		let resizer = document.createElement('button')
 
 		resizer.style.position = 'absolute'
@@ -62,23 +64,80 @@ class Resizable {
 		resizer.style.padding = 0
 		resizer.style.margin = 0
 		resizer.style.zIndex = 1
+		if (cursor) resizer.style.cursor = cursor
+
+		if (type == 'horizontal') {
+			resizer.style.width = '7px'
+			resizer.style.height = '100%'
+			resizer.style.top = 0
+			resizer.style.cursor = 'e-resize'
+		} else if (type == 'vertical') {
+			resizer.style.width = '100%'
+			resizer.style.height = '7px'
+			resizer.style.left = 0
+			resizer.style.cursor = 'n-resize'
+		} else if (type == 'angle') {
+			resizer.style.width = '10px'
+			resizer.style.height = '10px'
+			resizer.style.zIndex = 2
+		}
+
+		for (let side of sides) {
+			switch (side) {
+				case 'left':
+					resizer.style.left = 0
+					break
+				case 'right':
+					resizer.style.right = 0
+					break
+				case 'top':
+					resizer.style.top = 0
+					break
+				case 'bottom': 
+					resizer.style.bottom = 0
+					break
+			}
+		}
 
 		resizer.onmousedown = (event) => {
+			event.stopPropagation()
 			let shell = resizer.parentElement
 			let styles = window.getComputedStyle(parent)
 			let callback = (event) => {
-				listener(event)
+				let newCursorPosition = {x: event.pageX, y: event.pageY}
+				let styles = window.getComputedStyle(parent)
+				if (type == 'horizontal' || type == 'angle') {
+					let newParentWidth = null
+					if (sides.indexOf('right') != -1) {
+						newParentWidth = parseInt(parent.style.width) + (newCursorPosition.x - this.#cursorPosition.x)
+					} else if (sides.indexOf('left') != -1) {
+						newParentWidth = parseInt(parent.style.width) - (newCursorPosition.x - this.#cursorPosition.x)
+					}
+					parent.style.width = this.#limiter(parseInt(styles.minWidth), parseInt(styles.maxWidth) || Infinity, newParentWidth) + 'px'
+				}
+				if (type == 'vertical' || type == 'angle') {
+					let newParentHeight = null
+					if (sides.indexOf('bottom') != -1) {
+						newParentHeight = parseInt(parent.style.height) + (newCursorPosition.y - this.#cursorPosition.y)
+					} else if (sides.indexOf('top') != -1) {
+						newParentHeight = parseInt(parent.style.height) - (newCursorPosition.y - this.#cursorPosition.y)
+					}
+					parent.style.height = this.#limiter(parseInt(styles.minHeight), parseInt(styles.maxHeight) || Infinity, newParentHeight) + 'px'
+				}
+
+				this.#cursorPosition = newCursorPosition
 				let horizontalPaddings = parseInt(shell.style.paddingLeft) + parseInt(shell.style.paddingRight)
 				let verticalPaddings = parseInt(shell.style.paddingTop) + parseInt(shell.style.paddingBottom)
-				let minWidth = parseInt(styles.minWidth) - horizontalPaddings
-				let maxWidth = parseInt(styles.maxWidth) - horizontalPaddings
-				let newWidth = parseInt(parent.style.width) - horizontalPaddings
-				let minHeight = parseInt(styles.minHeight) - verticalPaddings
-				let maxHeight = parseInt(styles.maxHeight) - verticalPaddings
-				let newHeight = parseInt(parent.style.height) - verticalPaddings
-				shell.style.width = this.#limiter(minWidth, maxWidth || Infinity, newWidth) + 'px'
-				shell.style.height = this.#limiter(minHeight, maxHeight || Infinity, newHeight) + 'px'
+				let minShellWidth = parseInt(styles.minWidth) - horizontalPaddings
+				let maxShellWidth = parseInt(styles.maxWidth) - horizontalPaddings
+				let newShellWidth = parseInt(parent.style.width) - horizontalPaddings
+				let minShellHeight = parseInt(styles.minHeight) - verticalPaddings
+				let maxShellHeight = parseInt(styles.maxHeight) - verticalPaddings
+				let newShellHeight = parseInt(parent.style.height) - verticalPaddings
+				shell.style.width = this.#limiter(minShellWidth, maxShellWidth || Infinity, newShellWidth) + 'px'
+				shell.style.height = this.#limiter(minShellHeight, maxShellHeight || Infinity, newShellHeight) + 'px'
 			}
+			
 			this.#cursorPosition.x = event.pageX
 			this.#cursorPosition.y = event.pageY
 			document.addEventListener('mousemove', callback)
@@ -88,177 +147,6 @@ class Resizable {
 		}
 
 		return resizer
-	}
-
-	static #createHorizontalResizer = (parent, listener) => {
-		let horizontalResizer = this.#createResizer(parent, listener)
-
-		horizontalResizer.style.width = '7px'
-		horizontalResizer.style.height = '100%'
-		horizontalResizer.style.top = 0
-		horizontalResizer.style.cursor = 'e-resize'
-
-		return horizontalResizer
-	}
-
-	static #createVerticalResizer = (parent, listener) => {
-		let verticalResizer = this.#createResizer(parent, listener)
-
-		verticalResizer.style.width = '100%'
-		verticalResizer.style.height = '7px'
-		verticalResizer.style.left = 0
-		verticalResizer.style.cursor = 'n-resize'
-
-		return verticalResizer
-	}
-
-	static #createAngleResizer = (parent, listener) => {
-		let angleResizer = this.#createResizer(parent, listener)
-
-		angleResizer.style.width = '10px'
-		angleResizer.style.height = '10px'
-		angleResizer.style.zIndex = 2
-
-		return angleResizer
-	}
-
-	static #createTopLeftResizer = (parent) => {
-		let onMouseMove = (event) => {
-			event.stopPropagation()
-			let newCursorPosition = {x: event.pageX, y: event.pageY}
-			let styles = window.getComputedStyle(parent)
-			let newWidth = parseInt(parent.style.width) - (newCursorPosition.x - this.#cursorPosition.x)
-			let newHeight = parseInt(parent.style.height) - (newCursorPosition.y - this.#cursorPosition.y)
-			parent.style.width = this.#limiter(parseInt(styles.minWidth), parseInt(styles.maxWidth) || Infinity, newWidth) + 'px'
-			parent.style.height = this.#limiter(parseInt(styles.minHeight), parseInt(styles.maxHeight) || Infinity, newHeight) + 'px'
-			this.#cursorPosition = newCursorPosition
-		}
-		let topLeftResizer = this.#createAngleResizer(parent, onMouseMove)
-		topLeftResizer.style.top = 0
-		topLeftResizer.style.left = 0
-		topLeftResizer.style.cursor = 'se-resize'
-
-		return topLeftResizer
-	}
-
-	static #createBottomLeftResizer = (parent) => {
-		let onMouseMove = (event) => {
-			event.stopPropagation()
-			let newCursorPosition = {x: event.pageX, y: event.pageY}
-			let styles = window.getComputedStyle(parent)
-			let newWidth = parseInt(parent.style.width) - (newCursorPosition.x - this.#cursorPosition.x)
-			let newHeight = parseInt(parent.style.height) + (newCursorPosition.y - this.#cursorPosition.y)
-			parent.style.width = this.#limiter(parseInt(styles.minWidth), parseInt(styles.maxWidth) || Infinity, newWidth) + 'px'
-			parent.style.height = this.#limiter(parseInt(styles.minHeight), parseInt(styles.maxHeight) || Infinity, newHeight) + 'px'
-			this.#cursorPosition = newCursorPosition
-		}
-		let bottomLeftResizer = this.#createAngleResizer(parent, onMouseMove)
-		bottomLeftResizer.style.bottom = 0
-		bottomLeftResizer.style.left = 0
-		bottomLeftResizer.style.cursor = 'ne-resize'
-
-		return bottomLeftResizer
-	}
-
-	static #createTopRightResizer = (parent) => {
-		let onMouseMove = (event) => {
-			event.stopPropagation()
-			let newCursorPosition = {x: event.pageX, y: event.pageY}
-			let styles = window.getComputedStyle(parent)
-			let newWidth = parseInt(parent.style.width) + (newCursorPosition.x - this.#cursorPosition.x)
-			let newHeight = parseInt(parent.style.height) - (newCursorPosition.y - this.#cursorPosition.y)
-			parent.style.width = this.#limiter(parseInt(styles.minWidth), parseInt(styles.maxWidth) || Infinity, newWidth) + 'px'
-			parent.style.height = this.#limiter(parseInt(styles.minHeight), parseInt(styles.maxHeight) || Infinity, newHeight) + 'px'
-			this.#cursorPosition = newCursorPosition
-		}
-		let topRightResizer = this.#createAngleResizer(parent, onMouseMove)
-		topRightResizer.style.top = 0
-		topRightResizer.style.right = 0
-		topRightResizer.style.cursor = 'ne-resize'
-
-		return topRightResizer
-	}
-
-	static #createBottomRightResizer = (parent) => {
-		let onMouseMove = (event) => {
-			event.stopPropagation()
-			let newCursorPosition = {x: event.pageX, y: event.pageY}
-			let styles = window.getComputedStyle(parent)
-			let newWidth = parseInt(parent.style.width) + (newCursorPosition.x - this.#cursorPosition.x)
-			let newHeight = parseInt(parent.style.height) + (newCursorPosition.y - this.#cursorPosition.y)
-			parent.style.width = this.#limiter(parseInt(styles.minWidth), parseInt(styles.maxWidth) || Infinity, newWidth) + 'px'
-			parent.style.height = this.#limiter(parseInt(styles.minHeight), parseInt(styles.maxHeight) || Infinity, newHeight) + 'px'
-			this.#cursorPosition = newCursorPosition
-		}
-		let bottomRightResizer = this.#createAngleResizer(parent, onMouseMove)
-		bottomRightResizer.style.bottom = 0
-		bottomRightResizer.style.right = 0
-		bottomRightResizer.style.cursor = 'se-resize'
-
-		return bottomRightResizer
-	}
-
-	static #createTopResizer = (parent) => {
-		let onMouseMove = (event) => {
-			event.stopPropagation()
-			let newCursorPosition = {x: event.pageX, y: event.pageY}
-			let styles = window.getComputedStyle(parent)
-			let newHeight = parseInt(parent.style.height) - (newCursorPosition.y - this.#cursorPosition.y)
-			parent.style.height = this.#limiter(parseInt(styles.minHeight), parseInt(styles.maxHeight) || Infinity, newHeight) + 'px'
-			this.#cursorPosition = newCursorPosition
-		}
-		let topResizer = this.#createVerticalResizer(parent, onMouseMove)
-		topResizer.style.top = 0
-
-
-		return topResizer
-	}
-
-	static #createBottomResizer = (parent) => {
-		let onMouseMove = (event) => {
-			event.stopPropagation()
-			let newCursorPosition = {x: event.pageX, y: event.pageY}
-			let styles = window.getComputedStyle(parent)
-			let newHeight = parseInt(parent.style.height) + (newCursorPosition.y - this.#cursorPosition.y)
-			parent.style.height = this.#limiter(parseInt(styles.minHeight), parseInt(styles.maxHeight) || Infinity, newHeight) + 'px'
-			this.#cursorPosition = newCursorPosition
-		}
-		let bottomResizer = this.#createVerticalResizer(parent, onMouseMove)
-		bottomResizer.style.bottom = 0
-
-
-		return bottomResizer
-	}
-
-	static #createRightResizer = (parent) => {
-		let onMouseMove = (event) => {
-			event.stopPropagation()
-			let newCursorPosition = {x: event.pageX, y: event.pageY}
-			let styles = window.getComputedStyle(parent)
-			let newWidth = parseInt(parent.style.width) + (newCursorPosition.x - this.#cursorPosition.x)
-			parent.style.width = this.#limiter(parseInt(styles.minWidth), parseInt(styles.maxWidth) || Infinity, newWidth) + 'px'
-			this.#cursorPosition = newCursorPosition
-		}
-		let rightResizer = this.#createHorizontalResizer(parent, onMouseMove)
-		rightResizer.style.right = 0
-
-		return rightResizer
-	}
-
-	static #createLeftResizer = (parent) => {
-		let onMouseMove = (event) => {
-			event.stopPropagation()
-			let newCursorPosition = {x: event.pageX, y: event.pageY}
-			let styles = window.getComputedStyle(parent)
-			let newWidth = parseInt(parent.style.width) - (newCursorPosition.x - this.#cursorPosition.x)
-			parent.style.width = this.#limiter(parseInt(styles.minWidth), parseInt(styles.maxWidth) || Infinity, newWidth) + 'px'
-			this.#cursorPosition = newCursorPosition
-		}
-		let leftResizer = this.#createHorizontalResizer(parent, onMouseMove)
-		leftResizer.style.left = 0
-
-
-		return leftResizer
 	}
 
 	static #limiter = (min, max, number) => {
