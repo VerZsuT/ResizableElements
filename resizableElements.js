@@ -1,5 +1,7 @@
 class Resizable {
 	static #cursorPosition = {x: 0, y: 0}
+	static #inLimitWidth = true
+	static #inLimitHeight = true
 
 	static make(element, sides=['topLeft', 'top', 'topRight', 'right', 'bottomRight', 'bottom', 'bottomLeft', 'left']) {
 		let shell = document.createElement('div')
@@ -116,7 +118,7 @@ class Resizable {
 					} else if (sides.indexOf('left') != -1) {
 						newParentWidth = parseInt(parent.style.width) - (newCursorPosition.x - this.#cursorPosition.x)
 					}
-					parent.style.width = this.#limiter(parseInt(styles.minWidth), parseInt(styles.maxWidth) || Infinity, newParentWidth) + 'px'
+					parent.style.width = this.#widthLimiter(parseInt(styles.minWidth), parseInt(styles.maxWidth) || Infinity, newParentWidth) + 'px'
 				}
 				if (type == 'vertical' || type == 'angle') {
 					let newParentHeight = null
@@ -125,10 +127,16 @@ class Resizable {
 					} else if (sides.indexOf('top') != -1) {
 						newParentHeight = parseInt(parent.style.height) - (newCursorPosition.y - this.#cursorPosition.y)
 					}
-					parent.style.height = this.#limiter(parseInt(styles.minHeight), parseInt(styles.maxHeight) || Infinity, newParentHeight) + 'px'
+					parent.style.height = this.#heightLimiter(parseInt(styles.minHeight), parseInt(styles.maxHeight) || Infinity, newParentHeight) + 'px'
 				}
 
-				this.#cursorPosition = newCursorPosition
+				if (this.#inLimitHeight) {
+					this.#cursorPosition.y = newCursorPosition.y
+				} 
+				if (this.#inLimitWidth) {
+					this.#cursorPosition.x = newCursorPosition.x
+				}
+
 				let horizontalPaddings = parseInt(shell.style.paddingLeft) + parseInt(shell.style.paddingRight)
 				let verticalPaddings = parseInt(shell.style.paddingTop) + parseInt(shell.style.paddingBottom)
 				let minShellWidth = parseInt(styles.minWidth) - horizontalPaddings
@@ -137,8 +145,8 @@ class Resizable {
 				let minShellHeight = parseInt(styles.minHeight) - verticalPaddings
 				let maxShellHeight = parseInt(styles.maxHeight) - verticalPaddings
 				let newShellHeight = parseInt(parent.style.height) - verticalPaddings
-				shell.style.width = this.#limiter(minShellWidth, maxShellWidth || Infinity, newShellWidth) + 'px'
-				shell.style.height = this.#limiter(minShellHeight, maxShellHeight || Infinity, newShellHeight) + 'px'
+				shell.style.width = this.#widthLimiter(minShellWidth, maxShellWidth || Infinity, newShellWidth) + 'px'
+				shell.style.height = this.#heightLimiter(minShellHeight, maxShellHeight || Infinity, newShellHeight) + 'px'
 			}
 			
 			this.#cursorPosition.x = event.pageX
@@ -159,8 +167,30 @@ class Resizable {
 		return resizer
 	}
 
-	static #limiter = (min, max, number) => {
-		return Math.min(Math.max(min, number), max)
+	static #widthLimiter = (min, max, number) => {
+		if (number < min) {
+			this.#inLimitWidth = false
+			return min
+		} else if (number > max) {
+			this.#inLimitWidth = false
+			return max
+		} else {
+			this.#inLimitWidth = true
+			return number
+		}
+	}
+
+	static #heightLimiter = (min, max, number) => {
+		if (number < min) {
+			this.#inLimitHeight = false
+			return min
+		} else if (number > max) {
+			this.#inLimitHeight = false
+			return max
+		} else {
+			this.#inLimitHeight = true
+			return number
+		}
 	}
 }
 

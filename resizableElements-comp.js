@@ -107,6 +107,14 @@ var _cursorPosition = {
     y: 0
   }
 };
+var _inLimitWidth = {
+  writable: true,
+  value: true
+};
+var _inLimitHeight = {
+  writable: true,
+  value: true
+};
 var _createResizer = {
   writable: true,
   value: function value(parent, type, sides) {
@@ -189,7 +197,7 @@ var _createResizer = {
             newParentWidth = parseInt(parent.style.width) - (newCursorPosition.x - _classStaticPrivateFieldSpecGet(Resizable, Resizable, _cursorPosition).x);
           }
 
-          parent.style.width = _classStaticPrivateFieldSpecGet(Resizable, Resizable, _limiter).call(Resizable, parseInt(styles.minWidth), parseInt(styles.maxWidth) || Infinity, newParentWidth) + 'px';
+          parent.style.width = _classStaticPrivateFieldSpecGet(Resizable, Resizable, _widthLimiter).call(Resizable, parseInt(styles.minWidth), parseInt(styles.maxWidth) || Infinity, newParentWidth) + 'px';
         }
 
         if (type == 'vertical' || type == 'angle') {
@@ -201,10 +209,16 @@ var _createResizer = {
             newParentHeight = parseInt(parent.style.height) - (newCursorPosition.y - _classStaticPrivateFieldSpecGet(Resizable, Resizable, _cursorPosition).y);
           }
 
-          parent.style.height = _classStaticPrivateFieldSpecGet(Resizable, Resizable, _limiter).call(Resizable, parseInt(styles.minHeight), parseInt(styles.maxHeight) || Infinity, newParentHeight) + 'px';
+          parent.style.height = _classStaticPrivateFieldSpecGet(Resizable, Resizable, _heightLimiter).call(Resizable, parseInt(styles.minHeight), parseInt(styles.maxHeight) || Infinity, newParentHeight) + 'px';
         }
 
-        _classStaticPrivateFieldSpecSet(Resizable, Resizable, _cursorPosition, newCursorPosition);
+        if (_classStaticPrivateFieldSpecGet(Resizable, Resizable, _inLimitHeight)) {
+          _classStaticPrivateFieldSpecGet(Resizable, Resizable, _cursorPosition).y = newCursorPosition.y;
+        }
+
+        if (_classStaticPrivateFieldSpecGet(Resizable, Resizable, _inLimitWidth)) {
+          _classStaticPrivateFieldSpecGet(Resizable, Resizable, _cursorPosition).x = newCursorPosition.x;
+        }
 
         var horizontalPaddings = parseInt(shell.style.paddingLeft) + parseInt(shell.style.paddingRight);
         var verticalPaddings = parseInt(shell.style.paddingTop) + parseInt(shell.style.paddingBottom);
@@ -214,8 +228,8 @@ var _createResizer = {
         var minShellHeight = parseInt(styles.minHeight) - verticalPaddings;
         var maxShellHeight = parseInt(styles.maxHeight) - verticalPaddings;
         var newShellHeight = parseInt(parent.style.height) - verticalPaddings;
-        shell.style.width = _classStaticPrivateFieldSpecGet(Resizable, Resizable, _limiter).call(Resizable, minShellWidth, maxShellWidth || Infinity, newShellWidth) + 'px';
-        shell.style.height = _classStaticPrivateFieldSpecGet(Resizable, Resizable, _limiter).call(Resizable, minShellHeight, maxShellHeight || Infinity, newShellHeight) + 'px';
+        shell.style.width = _classStaticPrivateFieldSpecGet(Resizable, Resizable, _widthLimiter).call(Resizable, minShellWidth, maxShellWidth || Infinity, newShellWidth) + 'px';
+        shell.style.height = _classStaticPrivateFieldSpecGet(Resizable, Resizable, _heightLimiter).call(Resizable, minShellHeight, maxShellHeight || Infinity, newShellHeight) + 'px';
       };
 
       _classStaticPrivateFieldSpecGet(Resizable, Resizable, _cursorPosition).x = event.pageX;
@@ -235,10 +249,40 @@ var _createResizer = {
     return resizer;
   }
 };
-var _limiter = {
+var _widthLimiter = {
   writable: true,
   value: function value(min, max, number) {
-    return Math.min(Math.max(min, number), max);
+    if (number < min) {
+      _classStaticPrivateFieldSpecSet(Resizable, Resizable, _inLimitWidth, false);
+
+      return min;
+    } else if (number > max) {
+      _classStaticPrivateFieldSpecSet(Resizable, Resizable, _inLimitWidth, false);
+
+      return max;
+    } else {
+      _classStaticPrivateFieldSpecSet(Resizable, Resizable, _inLimitWidth, true);
+
+      return number;
+    }
+  }
+};
+var _heightLimiter = {
+  writable: true,
+  value: function value(min, max, number) {
+    if (number < min) {
+      _classStaticPrivateFieldSpecSet(Resizable, Resizable, _inLimitHeight, false);
+
+      return min;
+    } else if (number > max) {
+      _classStaticPrivateFieldSpecSet(Resizable, Resizable, _inLimitHeight, false);
+
+      return max;
+    } else {
+      _classStaticPrivateFieldSpecSet(Resizable, Resizable, _inLimitHeight, true);
+
+      return number;
+    }
   }
 };
 
