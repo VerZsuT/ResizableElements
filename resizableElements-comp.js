@@ -18,6 +18,21 @@ function _classStaticPrivateFieldSpecSet(receiver, classConstructor, descriptor,
 
 function _classStaticPrivateFieldSpecGet(receiver, classConstructor, descriptor) { if (receiver !== classConstructor) { throw new TypeError("Private static access of wrong provenance"); } if (descriptor.get) { return descriptor.get.call(receiver); } return descriptor.value; }
 
+Array.prototype.hasElement = function (element) {
+  return this.indexOf(element) != -1;
+};
+
+HTMLElement.prototype.setStyle = function (styleObject) {
+  for (var styleName in styleObject) {
+    var styleValue = styleObject[styleName];
+    this.style[styleName] = styleValue;
+  }
+};
+
+function int(string) {
+  return parseInt(string);
+}
+
 var Resizable = /*#__PURE__*/function () {
   function Resizable() {
     _classCallCheck(this, Resizable);
@@ -28,18 +43,20 @@ var Resizable = /*#__PURE__*/function () {
     value: function make(element) {
       var sides = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : ['topLeft', 'top', 'topRight', 'right', 'bottomRight', 'bottom', 'bottomLeft', 'left'];
       var shell = document.createElement('div');
-      var styles = window.getComputedStyle(element);
-      shell.style.padding = styles.padding;
-      shell.style.paddingTop = styles.paddingTop;
-      shell.style.paddingRight = styles.paddingRight;
-      shell.style.paddingLeft = styles.paddingLeft;
-      shell.style.paddingBottom = styles.paddingBottom;
-      shell.style.width = styles.width;
-      shell.style.height = styles.height;
-      shell.style.position = 'relative';
+      var elementStyle = window.getComputedStyle(element);
+      shell.setStyle({
+        padding: elementStyle.padding,
+        paddingTop: elementStyle.paddingTop,
+        paddingRight: elementStyle.paddingRight,
+        paddingLeft: elementStyle.paddingLeft,
+        paddingBottom: elementStyle.paddingBottom,
+        width: elementStyle.width,
+        height: elementStyle.height,
+        position: 'relative'
+      });
       shell.innerHTML = element.innerHTML;
-      element.style.width = parseInt(styles.width) + parseInt(styles.paddingLeft) + parseInt(styles.paddingRight) + 'px';
-      element.style.height = parseInt(styles.height) + parseInt(styles.paddingTop) + parseInt(styles.paddingBottom) + 'px';
+      element.style.width = int(elementStyle.width) + int(elementStyle.paddingLeft) + int(elementStyle.paddingRight) + 'px';
+      element.style.height = int(elementStyle.height) + int(elementStyle.paddingTop) + int(elementStyle.paddingBottom) + 'px';
 
       var _iterator = _createForOfIteratorHelper(sides),
           _step;
@@ -100,7 +117,14 @@ var Resizable = /*#__PURE__*/function () {
   return Resizable;
 }();
 
-var _cursorPosition = {
+var _firstCursorPosition = {
+  writable: true,
+  value: {
+    x: 0,
+    y: 0
+  }
+};
+var _secondCursorPosition = {
   writable: true,
   value: {
     x: 0,
@@ -117,32 +141,41 @@ var _inLimitHeight = {
 };
 var _createResizer = {
   writable: true,
-  value: function value(parent, type, sides) {
-    var cursor = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
+  value: function value(parent, resizerType, sides) {
+    var cursorStyle = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
+    var parentStyle = window.getComputedStyle(parent);
     var resizer = document.createElement('button');
-    resizer.style.position = 'absolute';
-    resizer.style.background = 'none';
-    resizer.style.border = 'none';
-    resizer.style.outline = 'none';
-    resizer.style.padding = 0;
-    resizer.style.margin = 0;
-    resizer.style.zIndex = 1;
-    if (cursor) resizer.style.cursor = cursor;
+    resizer.setStyle({
+      position: 'absolute',
+      background: 'none',
+      border: 'none',
+      outline: 'none',
+      padding: 0,
+      margin: 0,
+      zIndex: 0,
+      cursor: cursorStyle
+    });
 
-    if (type == 'horizontal') {
-      resizer.style.width = '7px';
-      resizer.style.height = '100%';
-      resizer.style.top = 0;
-      resizer.style.cursor = 'e-resize';
-    } else if (type == 'vertical') {
-      resizer.style.width = '100%';
-      resizer.style.height = '7px';
-      resizer.style.left = 0;
-      resizer.style.cursor = 'n-resize';
-    } else if (type == 'angle') {
-      resizer.style.width = '10px';
-      resizer.style.height = '10px';
-      resizer.style.zIndex = 2;
+    if (resizerType == 'horizontal') {
+      resizer.setStyle({
+        width: '7px',
+        height: '100%',
+        top: 0,
+        cursor: 'e-resize'
+      });
+    } else if (resizerType == 'vertical') {
+      resizer.setStyle({
+        width: '100%',
+        height: '7px',
+        left: 0,
+        cursor: 'n-resize'
+      });
+    } else if (resizerType == 'angle') {
+      resizer.setStyle({
+        width: '10px',
+        height: '10px',
+        zIndex: 2
+      });
     }
 
     var _iterator8 = _createForOfIteratorHelper(sides),
@@ -151,24 +184,7 @@ var _createResizer = {
     try {
       for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
         var side = _step8.value;
-
-        switch (side) {
-          case 'left':
-            resizer.style.left = 0;
-            break;
-
-          case 'right':
-            resizer.style.right = 0;
-            break;
-
-          case 'top':
-            resizer.style.top = 0;
-            break;
-
-          case 'bottom':
-            resizer.style.bottom = 0;
-            break;
-        }
+        resizer.style[side] = 0;
       }
     } catch (err) {
       _iterator8.e(err);
@@ -178,62 +194,60 @@ var _createResizer = {
 
     var onMouseDown = function onMouseDown(event) {
       event.stopPropagation();
-      var shell = resizer.parentElement;
-      var styles = window.getComputedStyle(parent);
 
       var onMouseMove = function onMouseMove(event) {
-        var newCursorPosition = {
+        var shell = resizer.parentElement;
+
+        _classStaticPrivateFieldSpecSet(Resizable, Resizable, _secondCursorPosition, {
           x: event.pageX || event.touches[0].pageX,
           y: event.pageY || event.touches[0].pageY
-        };
-        var styles = window.getComputedStyle(parent);
+        });
 
-        if (type == 'horizontal' || type == 'angle') {
-          var newParentWidth = null;
+        var newParentWidth = null,
+            newParentHeight = null;
 
-          if (sides.indexOf('right') != -1) {
-            newParentWidth = parseInt(parent.style.width) + (newCursorPosition.x - _classStaticPrivateFieldSpecGet(Resizable, Resizable, _cursorPosition).x);
-          } else if (sides.indexOf('left') != -1) {
-            newParentWidth = parseInt(parent.style.width) - (newCursorPosition.x - _classStaticPrivateFieldSpecGet(Resizable, Resizable, _cursorPosition).x);
+        if (resizerType == 'horizontal' || resizerType == 'angle') {
+          if (sides.hasElement('right')) {
+            newParentWidth = int(parent.style.width) + _classStaticPrivateFieldSpecGet(Resizable, Resizable, _deltaCursorPosition).call(Resizable, 'x');
+          } else if (sides.hasElement('left')) {
+            newParentWidth = int(parent.style.width) - _classStaticPrivateFieldSpecGet(Resizable, Resizable, _deltaCursorPosition).call(Resizable, 'x');
           }
 
-          parent.style.width = _classStaticPrivateFieldSpecGet(Resizable, Resizable, _widthLimiter).call(Resizable, parseInt(styles.minWidth), parseInt(styles.maxWidth) || Infinity, newParentWidth) + 'px';
+          parent.style.width = _classStaticPrivateFieldSpecGet(Resizable, Resizable, _widthLimiter).call(Resizable, parent, newParentWidth) + 'px';
         }
 
-        if (type == 'vertical' || type == 'angle') {
-          var newParentHeight = null;
-
-          if (sides.indexOf('bottom') != -1) {
-            newParentHeight = parseInt(parent.style.height) + (newCursorPosition.y - _classStaticPrivateFieldSpecGet(Resizable, Resizable, _cursorPosition).y);
-          } else if (sides.indexOf('top') != -1) {
-            newParentHeight = parseInt(parent.style.height) - (newCursorPosition.y - _classStaticPrivateFieldSpecGet(Resizable, Resizable, _cursorPosition).y);
+        if (resizerType == 'vertical' || resizerType == 'angle') {
+          if (sides.hasElement('bottom')) {
+            newParentHeight = int(parent.style.height) + _classStaticPrivateFieldSpecGet(Resizable, Resizable, _deltaCursorPosition).call(Resizable, 'y');
+          } else if (sides.hasElement('top')) {
+            newParentHeight = int(parent.style.height) - _classStaticPrivateFieldSpecGet(Resizable, Resizable, _deltaCursorPosition).call(Resizable, 'y');
           }
 
-          parent.style.height = _classStaticPrivateFieldSpecGet(Resizable, Resizable, _heightLimiter).call(Resizable, parseInt(styles.minHeight), parseInt(styles.maxHeight) || Infinity, newParentHeight) + 'px';
+          parent.style.height = _classStaticPrivateFieldSpecGet(Resizable, Resizable, _heightLimiter).call(Resizable, parent, newParentHeight) + 'px';
         }
 
         if (_classStaticPrivateFieldSpecGet(Resizable, Resizable, _inLimitHeight)) {
-          _classStaticPrivateFieldSpecGet(Resizable, Resizable, _cursorPosition).y = newCursorPosition.y;
+          _classStaticPrivateFieldSpecGet(Resizable, Resizable, _firstCursorPosition).y = _classStaticPrivateFieldSpecGet(Resizable, Resizable, _secondCursorPosition).y;
         }
 
         if (_classStaticPrivateFieldSpecGet(Resizable, Resizable, _inLimitWidth)) {
-          _classStaticPrivateFieldSpecGet(Resizable, Resizable, _cursorPosition).x = newCursorPosition.x;
+          _classStaticPrivateFieldSpecGet(Resizable, Resizable, _firstCursorPosition).x = _classStaticPrivateFieldSpecGet(Resizable, Resizable, _secondCursorPosition).x;
         }
 
-        var horizontalPaddings = parseInt(shell.style.paddingLeft) + parseInt(shell.style.paddingRight);
-        var verticalPaddings = parseInt(shell.style.paddingTop) + parseInt(shell.style.paddingBottom);
-        var minShellWidth = parseInt(styles.minWidth) - horizontalPaddings;
-        var maxShellWidth = parseInt(styles.maxWidth) - horizontalPaddings;
-        var newShellWidth = parseInt(parent.style.width) - horizontalPaddings;
-        var minShellHeight = parseInt(styles.minHeight) - verticalPaddings;
-        var maxShellHeight = parseInt(styles.maxHeight) - verticalPaddings;
-        var newShellHeight = parseInt(parent.style.height) - verticalPaddings;
-        shell.style.width = _classStaticPrivateFieldSpecGet(Resizable, Resizable, _widthLimiter).call(Resizable, minShellWidth, maxShellWidth || Infinity, newShellWidth) + 'px';
-        shell.style.height = _classStaticPrivateFieldSpecGet(Resizable, Resizable, _heightLimiter).call(Resizable, minShellHeight, maxShellHeight || Infinity, newShellHeight) + 'px';
+        var horizontalPaddings = int(shell.style.paddingLeft) + int(shell.style.paddingRight);
+        var verticalPaddings = int(shell.style.paddingTop) + int(shell.style.paddingBottom);
+        shell.style.minWidth = int(parentStyle.minWidth) - horizontalPaddings;
+        shell.style.maxWidth = int(parentStyle.maxWidth) - horizontalPaddings;
+        shell.style.minHeight = int(parentStyle.minHeight) - verticalPaddings;
+        shell.style.maxHeight = int(parentStyle.maxHeight) - verticalPaddings;
+        var shellWidth = int(parent.style.width) - horizontalPaddings;
+        var shellHeight = int(parent.style.height) - verticalPaddings;
+        shell.style.width = _classStaticPrivateFieldSpecGet(Resizable, Resizable, _widthLimiter).call(Resizable, shell, shellWidth) + 'px';
+        shell.style.height = _classStaticPrivateFieldSpecGet(Resizable, Resizable, _heightLimiter).call(Resizable, shell, shellHeight) + 'px';
       };
 
-      _classStaticPrivateFieldSpecGet(Resizable, Resizable, _cursorPosition).x = event.pageX;
-      _classStaticPrivateFieldSpecGet(Resizable, Resizable, _cursorPosition).y = event.pageY;
+      _classStaticPrivateFieldSpecGet(Resizable, Resizable, _firstCursorPosition).x = event.pageX;
+      _classStaticPrivateFieldSpecGet(Resizable, Resizable, _firstCursorPosition).y = event.pageY;
       document.addEventListener('mousemove', onMouseMove);
       document.addEventListener('touchmove', onMouseMove);
       document.addEventListener('mouseup', function () {
@@ -251,37 +265,55 @@ var _createResizer = {
 };
 var _widthLimiter = {
   writable: true,
-  value: function value(min, max, number) {
-    if (number < min) {
+  value: function value(element, width) {
+    var elementStyle = window.getComputedStyle(element);
+    var minWidth = int(elementStyle.minWidth || element.style.minWidth) || 0;
+    var maxWidth = int(elementStyle.maxWidth || element.style.maxWidth) || Infinity;
+
+    if (width < minWidth) {
       _classStaticPrivateFieldSpecSet(Resizable, Resizable, _inLimitWidth, false);
 
-      return min;
-    } else if (number > max) {
+      return minWidth;
+    } else if (width > maxWidth) {
       _classStaticPrivateFieldSpecSet(Resizable, Resizable, _inLimitWidth, false);
 
-      return max;
+      return maxWidth;
     } else {
       _classStaticPrivateFieldSpecSet(Resizable, Resizable, _inLimitWidth, true);
 
-      return number;
+      return width;
     }
   }
 };
 var _heightLimiter = {
   writable: true,
-  value: function value(min, max, number) {
-    if (number < min) {
+  value: function value(element, height) {
+    var elementStyle = window.getComputedStyle(element);
+    var minHeight = int(elementStyle.minHeight || element.style.minHeight) || 0;
+    var maxHeight = int(elementStyle.maxHeight || element.style.maxHeight) || Infinity;
+
+    if (height < minHeight) {
       _classStaticPrivateFieldSpecSet(Resizable, Resizable, _inLimitHeight, false);
 
-      return min;
-    } else if (number > max) {
+      return minHeight;
+    } else if (height > maxHeight) {
       _classStaticPrivateFieldSpecSet(Resizable, Resizable, _inLimitHeight, false);
 
-      return max;
+      return maxHeight;
     } else {
       _classStaticPrivateFieldSpecSet(Resizable, Resizable, _inLimitHeight, true);
 
-      return number;
+      return height;
+    }
+  }
+};
+var _deltaCursorPosition = {
+  writable: true,
+  value: function value(direction) {
+    if (direction == 'x') {
+      return _classStaticPrivateFieldSpecGet(Resizable, Resizable, _secondCursorPosition).x - _classStaticPrivateFieldSpecGet(Resizable, Resizable, _firstCursorPosition).x;
+    } else if (direction == 'y') {
+      return _classStaticPrivateFieldSpecGet(Resizable, Resizable, _secondCursorPosition).y - _classStaticPrivateFieldSpecGet(Resizable, Resizable, _firstCursorPosition).y;
     }
   }
 };
