@@ -27,15 +27,17 @@ If you want to stretch __all sides except any__, then from the previous example 
 ```
 In this case, the element can be stretched everywhere except the upper and right sides.
 
+You can change the multiplier of changing the size of the element. Put the class _mult-<vertical_multiplier>-<horizontal_multiplier>_. This may be needed when an element expands at once in several directions. For example, with _margin: 0 auto_.
+
 # Use with JS
 You can make elements mutable using JS, namely the __Resizable.make__ method:
 ```js
 let target = document.getElementById('target')
 Resizable.make(target)
 ```
-As a required argument, the function takes an element that must be made mutable. The second, optional argument is an array of strings (sides) that can be dragged.
+As a required argument, the function takes an element that must be made mutable. The second, optional arguments is an array of strings (sides) that can be dragged and multiplier.
 ```js
-Resizable.make(element, ['left', 'bottom'])
+Resizable.make(element, ['left', 'bottom'], 2)
 ```
 
 # Demo
