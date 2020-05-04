@@ -6,7 +6,7 @@ ResizableElements is a script that allows you to add resizable elements to your 
 * __resizableElements-сomp.js__ - _compatible_ version of the script. This is the _babel_-revised version code. Works in all browsers, but has more weight.
 * __resizableElements-comp-min.js__ - _compressed_ code of the compatible script weight. It weighs a little. I did not check cross-browser compatibility, but it should be.
 
-#Installation
+# Installation
 Connect the script to the page, for this it is enough to add the following line to the end of the _body_ (or to the _head_):
 ```html
 <script src="https://verzsut.github.io/ResizableElements/resizableElements.js"></script>
